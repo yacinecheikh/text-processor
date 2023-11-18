@@ -1,0 +1,20 @@
+.title
+Cours de gestion de ressources humaines
+
+.table-of-contents.start
+.link cours-1
+.table-of-contents.end
+
+.number-sections.start
+.number-lists.start
+
+.ref cours-1
+.section Introduction
+
+.list
+.item contingente
+.item partagée
+.item segmentée
+
+.ref cours-2
+.section Recrutement
