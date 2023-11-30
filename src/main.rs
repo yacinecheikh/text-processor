@@ -1,13 +1,14 @@
-use std::arch::x86_64::__cpuid;
-use std::fmt::format;
+mod commands;
+mod parse;
+
 use std::fs;
 use std::process::{Command, Stdio};
-use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::ops::Deref;
-use std::thread::yield_now;
 
 //static delimiter: &str = ".";
+
+
 
 struct Text(Vec<String>);
 
