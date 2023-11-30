@@ -1,0 +1,4 @@
+#!/usr/bin/python3
+
+with open("/dev/stdin") as f:
+    print(f.read())

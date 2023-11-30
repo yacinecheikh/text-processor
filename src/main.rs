@@ -192,18 +192,20 @@ fn main() {
                 };
 
                 let path = format!("commands/{}", name);
+                /*
                 if !command_exists(&path) {
                     panic!("undefined command: {}", &path);
                 }
+                 */
 
-                let mut cmd = Command::new(path);
+                let mut cmd = Command::new(&path);
                 cmd.stdin(Stdio::piped())
                     .stdout(Stdio::piped());
                 if let Some(param) = parameter {
                     cmd.arg(param);
                 }
 
-                let child_process = cmd.spawn().unwrap();
+                let child_process = cmd.spawn().expect(&format!("Could not call command: {}", &path));
                 child_process.stdin.unwrap().write(cmd_input.as_bytes()).unwrap();
                 let mut output = String::new();
                 child_process.stdout.unwrap().read_to_string(&mut output).unwrap();
