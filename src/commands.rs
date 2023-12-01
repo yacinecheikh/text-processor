@@ -1,15 +1,31 @@
 use std::env::{set_current_dir, current_dir};
 use std::fmt::format;
 use std::io::{Read, Stdin, Write};
+use std::os::unix::raw::mode_t;
 use std::process::{Stdio, Command};
+
+// TODO: remove set_current_dir() (not needed for commands, only once for the source file)
+
+
+fn init_commands(text_path: &str, libs: Vec<String>, targets: Vec<String>) {
+    let path = std::path::Path::new(text_path);
+    let parent = path.parent();
+    println!("{:?}", parent);
+}
+
 
 fn list_commands(text_path: &str) -> Vec<String> {
     return Vec::new()
 }
 
-fn call(path: &str, input: &str, args: Option<String>, working_directory: &str) -> String {
-    let dir = current_dir().expect("could not get current working directory");
-    set_current_dir(working_directory).expect("TODO: panic message");
+// find path
+fn find(command: &str) -> String {
+    String::new()
+}
+
+fn call(path: &str, input: &str, args: Option<String>, working_directory: &str) -> Option<String> {
+    let dir = current_dir().ok()?;
+    set_current_dir(working_directory).ok()?;
 
     let mut cmd = Command::new(path);
     cmd.stdin(Stdio::piped())
@@ -17,13 +33,16 @@ fn call(path: &str, input: &str, args: Option<String>, working_directory: &str) 
     if let Some(args) = args {
         cmd.arg(args);
     }
-    let process = cmd.spawn().expect(&format!("could not start process: {}", path));
-    process.stdin.expect(&format!("could not access the stdin pipe of subprocess: {}", path))
-        .write(input.as_ref()).expect("could not write to stdin of subprocess");
+    let process = cmd.spawn().ok()?;
+    process.stdin?.write(input.as_ref()).ok()?;
 
     let mut result = String::new();
-    process.stdout.unwrap().read_to_string(&mut result).unwrap();
+    process.stdout?.read_to_string(&mut result).ok()?;
 
-    set_current_dir(dir).expect("TODO: panic message");
-    return result
+    set_current_dir(dir).ok()?;
+    return Some(result)
+}
+
+fn command_exists(path: &str) -> bool {
+    false
 }
