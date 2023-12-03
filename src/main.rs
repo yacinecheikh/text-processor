@@ -3,7 +3,7 @@ mod parse;
 mod args;
 
 use std::fs;
-use std::process::{Command, Stdio};
+use std::process::{Command, exit, Stdio};
 use std::io::{Read, Write};
 use std::ops::Deref;
 use crate::args::Arguments;
@@ -12,6 +12,9 @@ use crate::parse::parse_block;
 //static delimiter: &str = ".";
 
 
+
+#[cfg(test)]
+mod tests;
 
 struct Text(Vec<String>);
 
@@ -35,30 +38,32 @@ fn combine_texts(added: &str, text: &str) -> String {
 
 
 
-
 fn main() {
     let args = args::parse_args();
-    match args {
-        Ok(arguments) => {
-            println!("file: {}", arguments.file);
-            println!("libs: {:?}", arguments.libs);
-            println!("targets: {:?}", arguments.targets);
-        }
-        Err(err) => {
-            println!("error while parsing arguments: {}", err);
-        }
-    }
+    let Ok(args) = args else {
+        let err = args.err().unwrap();
+        println!("error while parsing arguments: {}", err);
+        exit(0);
+    };
+    println!("file: {}", args.file);
+    println!("libs: {:?}", args.libs);
+    println!("targets: {:?}", args.targets);
 
-    /*
     let input = fs::read(args.file)
         .unwrap();
     // use utf8 strings
     let mut input = String::from_utf8(input).unwrap();
+
+
+    for target in args.targets {
+        //
+    }
+
     // TODO: check if still needed with new syntax
     input.push('\n'); // needed when parsing the end of a block (".<command>.end\n")
 
     let mut processed: Vec<String> = Vec::new();
-*/
+
 
     /*
     while let Some((line, left_text)) = parse::split_line(&input) {
@@ -124,11 +129,8 @@ fn main() {
     }
 
      */
-
-    /*
     let result = processed.join("\n");
     println!("{}", result);
-     */
 
 
 
