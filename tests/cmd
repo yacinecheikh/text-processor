@@ -1,0 +1,1 @@
+cargo run -- --lib test --target pdf,html,md tests/input

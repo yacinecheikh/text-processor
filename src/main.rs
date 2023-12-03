@@ -1,10 +1,13 @@
 mod commands;
 mod parse;
+mod args;
 
 use std::fs;
 use std::process::{Command, Stdio};
 use std::io::{Read, Write};
 use std::ops::Deref;
+use crate::args::Arguments;
+use crate::parse::parse_block;
 
 //static delimiter: &str = ".";
 
@@ -23,139 +26,6 @@ struct CommandCall {
     parameter: Option<String>,
 }
 
-fn parse_command(mut line: &str) -> Option<CommandCall> {
-    if line.len() == 0 || !line.starts_with(".") {
-        return None
-    }
-    // trying to get utf8 best practices right, even if '.' is always 1 byte
-    line = &line['.'.len_utf8()..];
-
-    let mut name = String::new();
-    let mut block = false; // ".start" suffix after ".<command>"
-
-    // this code needs to keep a &str slice and not just an iterator
-    // because of forward peeking
-    while let Some(ch) = line.chars().next() {
-        line = &line[ch.len_utf8()..];
-        match ch {
-            '.' => {
-                // ".start" suffix ?
-                if line.starts_with("start") {
-                    // optimistic parsing, may revert to block = false
-                    // (example: .<command>.start-logging.sh)
-                    block = true;
-                    line = &line["start".as_bytes().len()..];
-                }
-                if line.len() == 0 {
-                    return Some(CommandCall {
-                        name,
-                        block,
-                        parameter: None,
-                    })
-                } else if line.starts_with(" ") {
-                    line = &line[' '.len_utf8()..];
-                    return Some(CommandCall {
-                        name,
-                        block,
-                        parameter: Some(line.to_string()),
-                    })
-                } else {
-                    // parsing .start as a suffix was a mistake; keep parsing
-                    block = false;
-                    name.push_str(".start")
-                }
-            }
-            ' ' => {
-                // command parameter
-                return Some(CommandCall {
-                    name,
-                    block,
-                    parameter: Some(line.to_string()),
-                })
-            }
-            _ => {
-                name.push(ch)
-            }
-        }
-    }
-
-    return Some(CommandCall {
-        name,
-        block,
-        parameter: None,
-    })
-}
-
-fn split_line(mut text: &str) -> Option<(String, &str)> {
-    if text.len() == 0 {
-        return None
-    }
-    let mut line = String::new();
-    while let Some(ch) = text.chars().next() {
-        text = &text[ch.len_utf8()..];
-        match ch {
-            '\n' => {
-                println!("line length: {}", line.len());
-                return Some((line, text))
-            }
-            _ => {
-                line.push(ch)
-            }
-        }
-    }
-    println!("line length: {}", line.len());
-    Some((line, text))
-}
-
-
-fn command_exists(path: &str) -> bool {
-    match fs::metadata(path) {
-        Ok(_) => true,
-        Err(_) => false
-    }
-}
-
-fn read_block<'a>(mut text: &'a str, cmd: &str) -> (String, &'a str) {
-    let mut extracted = String::new();
-
-    let prefix = format!(".{}.end\n", cmd);
-    let prefix = prefix.as_str();
-    while let Some(ch) = text.chars().next() {
-        text = &text[ch.len_utf8()..];
-        match ch {
-            '\n' if text.starts_with(prefix) => {
-                // end of block
-                text = &text[prefix.as_bytes().len()..];
-                return (extracted, text)
-            }
-            ch => {
-                extracted.push(ch);
-            }
-        }
-    }
-
-    // if the block never ends, everything is considered part of the block
-    return (extracted, text)
-}
-
-fn read_paragraph(mut text: &str) -> (String, &str) {
-    let mut extracted = String::new();
-    while let Some(ch) = text.chars().next() {
-        text = &text[ch.len_utf8()..];
-        match ch {
-            '\n' if text.starts_with("\n") => {
-                // end of paragraph
-                return (extracted, &text[ch.len_utf8()..])
-            }
-            ch => {
-                extracted.push(ch)
-            }
-        }
-    }
-    (extracted, text)
-}
-
-
 fn combine_texts(added: &str, text: &str) -> String {
     let mut result = String::new();
     result.push_str(added);
@@ -167,15 +37,51 @@ fn combine_texts(added: &str, text: &str) -> String {
 
 
 fn main() {
-    let input = fs::read("/dev/stdin")
+    let args = args::parse_args();
+    match args {
+        Ok(arguments) => {
+            println!("file: {}", arguments.file);
+            println!("libs: {:?}", arguments.libs);
+            println!("targets: {:?}", arguments.targets);
+        }
+        Err(err) => {
+            println!("error while parsing arguments: {}", err);
+        }
+    }
+
+    /*
+    let input = fs::read(args.file)
         .unwrap();
     // use utf8 strings
     let mut input = String::from_utf8(input).unwrap();
+    // TODO: check if still needed with new syntax
     input.push('\n'); // needed when parsing the end of a block (".<command>.end\n")
 
-    let mut processed = Vec::new();
+    let mut processed: Vec<String> = Vec::new();
+*/
 
-    while let Some((line, left_text)) = split_line(&input) {
+    /*
+    while let Some((line, left_text)) = parse::split_line(&input) {
+        match parse::parse_section_header(&line) {
+            None => {
+                processed.push(line);
+                // TODO: use a slice instead of a String input (to save some O(n) copying of an entire book)
+                input = left_text.to_string();
+            }
+            /*
+            Some(section_header) => {
+                match parse_block(section_header, &input) {
+                    None => {
+                        //
+                    }
+                    Some(_) => {}
+                }
+            }
+             */
+        }
+
+     */
+    /*
         match parse_command(&line) {
             None => {
                 processed.push(line);
@@ -217,8 +123,15 @@ fn main() {
         }
     }
 
+     */
+
+    /*
     let result = processed.join("\n");
     println!("{}", result);
+     */
+
+
+
 /*
     let lines: Vec<&str> = stdin.split("\n").collect();
 

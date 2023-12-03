@@ -4,13 +4,13 @@ struct Call {
     content: String,
 }
 
-struct SectionHeader {
+pub struct SectionHeader {
     name: String,
     parameter: String,
     previous_indent: String,
 }
 
-struct Section {
+pub struct Section {
     header: SectionHeader,
     indent: String,
     content: String,
@@ -34,7 +34,7 @@ fn split_indent(mut text: &str) -> (String, &str) {
 }
 
 
-fn split_line(mut text: &str) -> Option<(String, &str)> {
+pub fn split_line(mut text: &str) -> Option<(String, &str)> {
     if text.len() == 0 {
         return None
     }
@@ -56,9 +56,33 @@ fn split_line(mut text: &str) -> Option<(String, &str)> {
     Some((line, text))
 }
 
+fn is_empty(line: &str) -> bool {
+    for ch in line.chars() {
+        match ch {
+            ' ' | '\t' => {},
+            '\n' => return true,
+            _ => return false,
+        }
+    }
+    return true
+}
+
+pub fn split_empty_lines(mut text: &str) -> (String, &str) {
+    let mut empty_lines = String::new();
+    while let Some((line, next)) = split_line(text) {
+        if is_empty(&line) {
+            empty_lines.push_str(&line);
+            text = next;
+        } else {
+            return (empty_lines, text)
+        }
+    }
+    (empty_lines, text)
+}
+
 static DELIMITER: &str = ".";
 
-fn parse_section(line: &str) -> Option<SectionHeader> {
+pub fn parse_section_header(line: &str) -> Option<SectionHeader> {
     let (indent, line) = split_indent(line);
     if !line.starts_with(DELIMITER) {
         return None
@@ -75,7 +99,7 @@ fn parse_section(line: &str) -> Option<SectionHeader> {
     Some(call)
 }
 
-fn parse_block(section: SectionHeader, text: &str) -> Option<(Section, &str)> {
+pub fn parse_block(section: SectionHeader, text: &str) -> Option<(Section, &str)> {
     match split_line(text) {
         // no text left
         // TODO: might be a bug depending on what behaviour we want

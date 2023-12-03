@@ -1,14 +1,18 @@
-.title Cours de gestion de ressources humaines
+.title: Cours de gestion de ressources humaines
 
-.table-of-contents.start
-.link cours-1
-.table-of-contents.end
+.table-of-contents:
+	.link cours-1
 
-.number-sections.start
-.number-lists.start
+(This way of doing is ugly, use .config commands instead)
+.number-sections:
+.number-lists:
 
-.ref cours-1
-.section Introduction
+.ref: cours-1
+.section: Introduction
+
+.section: Introduction
+	Content
+
 
 .list
 .item contingente
