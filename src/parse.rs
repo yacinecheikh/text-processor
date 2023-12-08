@@ -131,36 +131,38 @@ pub fn split_empty_lines(mut text: &str) -> (&str, &str) {
 
 static DELIMITER: &str = ".";
 
-pub fn parse_command_line(line: &str) -> Option<CommandLine> {
+pub fn parse_header(line: &str) -> Option<CallHeader> {
     let (indent, line) = split_indent(line);
     if !line.starts_with(DELIMITER) {
         return None
     }
-    // strip the prefix
-    let line = &line[DELIMITER.as_bytes().len()..];
-    let mut call = CommandLine {
-        base_indent: indent,
-        name: "".to_string(),
-        argument: None,
-        block_syntax: false,
-    };
-    if !line.contains(':') {
-        // not expecting a block nor a parameter
+    let (_, line) = split(line, DELIMITER.as_bytes().len());
+
+    if !line.contains(":") {
+        return Some(CallHeader::Oneliner {
+            // TODO: strip right ? (or at least remove the \n if still here)
+            name: line.to_string(),
+        })
     }
-    match line.split_once(": ") {
-        None => {
-            // no parameter, no block
-            call.name = line.to_string();
-        }
-        Some((name, arg)) => {
-            call.name = name.to_string();
-            if !is_empty(arg) {
-                call.argument = Some(arg.to_string());
-            }
-        }
+    let (start, end) = line.split_once(":").unwrap();
+    // TODO: remove the trailing \n in split_line
+    if end.len() == 0 {
+        return Some(CallHeader::Block {
+            name: start.to_string(),
+            base_indent: indent.to_string(),
+        })
     }
-    return Some(call)
+    // support both ".title: Title" and ".title:Title"
+    let end = end.strip_prefix(" ").unwrap_or(end);
+    return Some(CallHeader::Mixed {
+        name: start.to_string(),
+        base_indent: indent.to_string(),
+        argument: end.to_string(),
+    })
 }
+
+
+
 
 pub fn parse_command_block(command_header: CommandLine, text: &str) -> Result<(Command, &str), String> {
     let (empty, left_text) = split_empty_lines(text);
