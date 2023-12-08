@@ -9,35 +9,10 @@ struct Tag {
     base_indent: String, // indentation at the head line
     argument: Option<String>, // if an argument is found, having a block after : is optional and requires further indentation
 }
-struct ReplaceBlock {
+pub struct Section {
     name: String,
     argument: Option<String>,
     body: Option<String>,
-}
-
-// TODO: remove
-
-enum CallHeader {
-    Block {
-        name: String,
-        base_indent: String,
-    },
-    Oneliner {
-        name: String,
-    },
-    Mixed {
-        // may include a block, but it has to be indented for clarity
-        name: String,
-        base_indent: String,
-        argument: String,
-    }
-}
-
-
-struct Call {
-    name: String,
-    body: Option<String>,
-    argument: Option<String>,
 }
 
 
@@ -50,7 +25,7 @@ fn split(text: &str, offset: usize) -> (&str, &str) {
 }
 
 
-pub fn strip_indent(line: &str) -> (&str, &str) {
+fn strip_indent(line: &str) -> (&str, &str) {
     let mut offset = 0;
     for ch in line.chars() {
         match ch {
@@ -130,7 +105,7 @@ pub fn strip_empty_lines(mut text: &str) -> (&str, &str) {
 /* syntax-specific parsing */
 
 fn get_next_indent(text: &str) -> Option<String> {
-    let (empty_lines, rest) = strip_empty_lines(text);
+    let (_, rest) = strip_empty_lines(text);
     match strip_line(rest) {
         None => {
             // no line to add in the block
@@ -229,11 +204,11 @@ fn parse_body<'a>(text: &'a str, tag: &Tag) -> Option<(String, &'a str)> {
     return Some((body, text));
 }
 
-fn parse_section(text: &str) -> Option<Result<(ReplaceBlock, &str), String>> {
+pub fn parse_section(text: &str) -> Option<Result<(Section, &str), String>> {
     let (line, text) = strip_line(text)?;
     let tag = parse_tag(line)?;
 
-    let mut result = ReplaceBlock {
+    let mut result = Section {
         name: tag.name,
         argument: tag.argument,
         body: None,
