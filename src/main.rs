@@ -2,13 +2,16 @@ mod commands;
 mod parse;
 mod args;
 
+mod generate;
+
+mod path;
+
 use std::fs;
 use std::process::{Command, exit, Stdio};
 use std::io::{Read, Write};
 use std::ops::Deref;
 use crate::args::Arguments;
-use crate::parse::parse_block;
-
+use crate::generate::generate_target;
 //static delimiter: &str = ".";
 
 
@@ -49,14 +52,28 @@ fn main() {
     println!("libs: {:?}", args.libs);
     println!("targets: {:?}", args.targets);
 
-    let input = fs::read(args.file)
+    if let Err(msg) = generate::prepare_filesystem(&args) {
+        println!("{}", msg);
+        exit(0);
+    }
+
+    let input = fs::read(&args.file)
         .unwrap();
     // use utf8 strings
+    let source = String::from_utf8(input.clone()).expect("not utf-8");
     let mut input = String::from_utf8(input).unwrap();
 
 
     for target in args.targets {
-        //
+        println!("generating {}", &target);
+        let result = generate::generate_target(&args.file, &target, source.clone());
+        match result {
+            Ok(()) => {
+                // TODO: target compiles itself as a file, a Vec<u8> or a String ?
+                // generated output is left to the target compiler ?
+            }
+            Err(err) => {}
+        }
     }
 
     // TODO: check if still needed with new syntax

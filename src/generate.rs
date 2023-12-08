@@ -37,10 +37,8 @@ pub fn prepare_libs(args: &Arguments) -> Result<(), String> {
     Ok(())
 }
 
-pub fn generate_target(file: &str, target: &str) -> Result<(), String> {
+pub fn generate_target(file: &str, target: &str, text: String) -> Result<(), String> {
     // TODO
-
-    let text = "".to_string();
 
     match process_file(text) {
         Ok(text) => {

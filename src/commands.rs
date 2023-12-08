@@ -1,7 +1,6 @@
 use std::env::{set_current_dir, current_dir};
-use std::fmt::format;
+use std::{env, fs};
 use std::io::{Read, Stdin, Write};
-use std::os::unix::raw::mode_t;
 use std::process::{Stdio, Command};
 
 // TODO: remove set_current_dir() (not needed for commands, only once for the source file)
@@ -14,8 +13,16 @@ fn init_commands(text_path: &str, libs: Vec<String>, targets: Vec<String>) {
 }
 
 
-fn list_commands(text_path: &str) -> Vec<String> {
-    return Vec::new()
+fn list_commands(file_path: &str) -> Vec<String> {
+    let mut paths = Vec::new();
+
+    // TODO: use file_path as a path (not a
+    let dir = env::current_dir().unwrap();
+    //file_path.parent(), file_path.file_stem() + . + file_path.extension() ?
+    env::set_current_dir(file_path).expect("could not cd to file dir");
+    let libs = fs::read_dir(format!(".{}.generation/libs", file_path));
+
+    return paths
 }
 
 // find path
@@ -42,6 +49,8 @@ fn call(path: &str, input: &str, args: Option<String>, working_directory: &str) 
     set_current_dir(dir).ok()?;
     return Some(result)
 }
+
+//pub fn run(name: &str, parameter: Option<String>, conte)
 
 fn command_exists(path: &str) -> bool {
     false

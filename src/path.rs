@@ -22,7 +22,7 @@ impl Drop for Cd {
     }
 }
 
-fn cd(directory: &str) -> Cd {
+pub fn cd(directory: &str) -> Cd {
     return Cd {
         previous_directory: std::env::current_dir().unwrap(),
     }

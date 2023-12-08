@@ -208,16 +208,18 @@ pub fn parse_section(text: &str) -> Option<Result<(Section, &str), String>> {
     let (line, text) = strip_line(text)?;
     let tag = parse_tag(line)?;
 
+    let mut left_text = text;
+    let body = parse_body(text, &tag);
     let mut result = Section {
         name: tag.name,
         argument: tag.argument,
         body: None,
     };
-    let mut left_text = text;
-    match parse_body(left_text, &tag) {
-        None if tag.argument.is_none() => {
+
+    match body {
+        None if result.argument.is_none() => {
             // Syntax error: expecting a body
-            return Some(Err(format!("Syntax error: expecting a body after \".{}:\"", tag.name)));
+            return Some(Err(format!("Syntax error: expecting a body after \".{}:\"", result.name)));
         }
         Some((body, text)) => {
             left_text = text;
