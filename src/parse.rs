@@ -164,12 +164,12 @@ pub fn parse_header(line: &str) -> Option<CallHeader> {
 
 
 pub fn parse_command(header: CallHeader, text: &str) -> Result<(Call, &str), String> {
-    match header {
+    return match header {
         CallHeader::Oneliner {
             name
         } => {
             // no block to parse
-            return Ok((Call {
+            Ok((Call {
                 name,
                 body: None,
                 argument: None,
@@ -179,19 +179,52 @@ pub fn parse_command(header: CallHeader, text: &str) -> Result<(Call, &str), Str
             name,
             base_indent
         } => {
+            match parse_block(text, Some(base_indent.as_str())) {
+                None => {
+                    println!("WARNING: could not find a valid block after '.{}:' (using placeholder instead)", name);
+                    Ok((Call {
+                        name,
+                        body: Some("".to_string()),
+                        argument: None,
+                    }, text))
+                }
+                Some((content, text)) => {
+                    Ok((Call {
+                        name,
+                        body: Some(content),
+                        argument: None,
+                    }, text))
+                }
+            }
         }
         CallHeader::Mixed {
             name, base_indent, argument
-        } => {//
+        } => {
+            match parse_block(text, if base_indent.len() == 0 { None } else { Some(base_indent.as_str()) }) {
+                None => {
+                    // no block
+                    Ok((Call {
+                        name,
+                        body: None,
+                        argument: Some(argument),
+                    }, text))
+                }
+                Some((content, text)) => {
+                    Ok((Call {
+                        name,
+                        body: Some(content),
+                        argument: Some(argument),
+                    }, text))
+                }
+            }
         }
     }
-    Err("test".to_string())
 }
 
 
 // TODO: this code is too complex because of me trying to guess the indent level while parsing
 //  (instead of parsing two times to separate tasks)
-fn parse_block2<'a>(text: &'a str, base_indent: Option<&str>) -> Option<(String, &'a str)>{
+fn parse_block<'a>(text: &'a str, base_indent: Option<&str>) -> Option<(String, &'a str)>{
     // find first indented line to get the indent level
     let (empty, left) = split_empty_lines(text);
     let result = split_line(left);
@@ -240,89 +273,3 @@ fn parse_block2<'a>(text: &'a str, base_indent: Option<&str>) -> Option<(String,
     }
     None // never used
 }
-
-pub fn parse_command_block(command_header: CommandLine, text: &str) -> Result<(Command, &str), String> {
-    let (empty, left_text) = split_empty_lines(text);
-    match split_line(left_text) {
-        None => {
-            if let Some(_) = command_header.argument {
-                // no need for a block
-                return Ok((Oneliner {
-                    name: command_header.name,
-                    arg: command_header.argument,
-                }, text))
-            } else {
-                // should expect a block, but no block was found
-                // -> send empty lines (empty block),
-                // and send a warning
-                println!("Warning: only empty lines found in block under command {}", &command_header.name);
-                return Ok((Block {
-                    name: command_header.name,
-                    arg: command_header.argument,
-                    content: empty.to_string(),
-                }, left_text))
-            }
-        }
-        Some((line, left_text)) => {
-            /*
-            let block = Block {
-                name: command_header.name,
-                arg: command_header.parameter,
-                content: "".to_string(),
-            };
-
-             */
-            let (indent, line) = split_indent(line.as_str());
-            if !indent.starts_with(command_header.base_indent) {
-                match command_header.argument {
-                    Some(_) => {
-                        // actually not a block, but a oneliner
-                        return Ok((Oneliner {
-                            name: command_header.name,
-                            arg: command_header.argument,
-                        }, text))
-                    }
-
-                    None => {
-                        //
-                    }
-                }
-            }
-
-            //block.content
-            return Ok((block, left_text))
-        }
-    }
-    None
-}
-
-pub fn parse_block(section: SectionHeader, text: &str) -> Option<(Section, &str)> {
-    match split_line(text) {
-        // no text left -> inline
-        None => {
-            None
-        }
-        Some((line, mut text)) => {
-            let (indent, rest) = split_indent(&line);
-            let mut section = Section {
-                header: section,
-                indent,
-                content: rest.to_string(),
-            };
-            while let Some((line, next)) = split_line(text) {
-                let (indent, rest) = split_indent(&line);
-                if indent.starts_with(&section.indent) {
-                    // the line is in the block
-                    section.content.push_str(rest);
-                    text = next;
-                } else {
-                    // end of block (before the text ends)
-                    return Some((section, text))
-                }
-            }
-            // no line left -> end of block
-            Some((section, text))
-        }
-    }
-}
-
