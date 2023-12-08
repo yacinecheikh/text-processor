@@ -163,6 +163,83 @@ pub fn parse_header(line: &str) -> Option<CallHeader> {
 
 
 
+pub fn parse_command(header: CallHeader, text: &str) -> Result<(Call, &str), String> {
+    match header {
+        CallHeader::Oneliner {
+            name
+        } => {
+            // no block to parse
+            return Ok((Call {
+                name,
+                body: None,
+                argument: None,
+            }, text))
+        }
+        CallHeader::Block {
+            name,
+            base_indent
+        } => {
+        }
+        CallHeader::Mixed {
+            name, base_indent, argument
+        } => {//
+        }
+    }
+    Err("test".to_string())
+}
+
+
+// TODO: this code is too complex because of me trying to guess the indent level while parsing
+//  (instead of parsing two times to separate tasks)
+fn parse_block2<'a>(text: &'a str, base_indent: Option<&str>) -> Option<(String, &'a str)>{
+    // find first indented line to get the indent level
+    let (empty, left) = split_empty_lines(text);
+    let result = split_line(left);
+    if result.is_none() {
+        // nothing to parse -> no block to return
+        // (for Block: make an empty block and print a warning)
+        // (TODO, not in this function)
+        return None
+    }
+    let (first_line, left) = result.unwrap();
+    let (indent, line) = split_indent(first_line);
+    // nothing that can be parsed -> no block to return
+    // same as above
+    if let Some(base_indent) = base_indent {
+        if indent.starts_with(base_indent) {
+            // the first line does not belong to the block
+            // -> warning + empty block if needed (Block), None if not (Mixed)
+            return None
+        }
+    }
+
+    // from this point, the first line either follows the previous indentation level,
+    // or there was no indentation before
+    let mut block: String = String::new();
+    block.push_str(empty);
+    block.push_str(first_line);
+    let mut text = left;
+    while true { // sorry
+        let (empty, left) = split_empty_lines(text);
+        match split_line(left) {
+            None => {
+                // end of block
+                return Some((block, text))
+            }
+            Some((full_line, left)) => {
+                let (indent, line) = split_indent(full_line);
+                if !indent.starts_with(base_indent) {
+                    // end of block
+                    return Some((block, text))
+                }
+                block.push_str(empty);
+                block.push_str(full_line);
+                text = left;
+            }
+        }
+    }
+    None // never used
+}
 
 pub fn parse_command_block(command_header: CommandLine, text: &str) -> Result<(Command, &str), String> {
     let (empty, left_text) = split_empty_lines(text);
