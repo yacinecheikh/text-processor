@@ -54,6 +54,13 @@ pub fn generate_target(file: &str, target: &str, text: String) -> Result<(), Str
     // TODO
 }
 
+fn combine_texts(added: &str, text: &str) -> String {
+    let mut result = String::new();
+    result.push_str(added);
+    result.push_str(text);
+    result
+}
+
 fn process_file(mut text: String) -> Result<String, String> {
     let mut left_text = text.as_str();
     let mut processed = String::new();

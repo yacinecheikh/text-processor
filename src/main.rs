@@ -6,7 +6,7 @@ mod generate;
 
 mod path;
 
-use std::fs;
+use std::{env, fs};
 use std::process::{Command, exit, Stdio};
 use std::io::{Read, Write};
 use std::ops::Deref;
@@ -19,38 +19,50 @@ use crate::generate::generate_target;
 #[cfg(test)]
 mod tests;
 
-struct Text(Vec<String>);
 
-impl Text {
-    fn read(n: usize) {
+
+
+fn test_args() {
+    let args = args::parse_args();
+    match args {
+        Ok(args) => {
+            println!("file: {}", args.file);
+            println!("libs: {:?}", args.libs);
+            println!("targets: {:?}", args.targets);
+        }
+        Err(err) => {
+            println!("{}", err)
+        }
     }
 }
 
-struct CommandCall {
-    name: String,
-    block: bool,
-    parameter: Option<String>,
-}
+fn test_path() {
+    //println!("{:?}", path::folder("/"));
+    println!("{:?}", path::set_extension("/test.pdf", "md"));
+    println!("{:?}", path::absolutize("."));
 
-fn combine_texts(added: &str, text: &str) -> String {
-    let mut result = String::new();
-    result.push_str(added);
-    result.push_str(text);
-    result
+    {
+        let _cd = path::cd("../../");
+        println!("{:?}", env::current_dir().unwrap());
+        let _cd = path::cd("../");
+        println!("{:?}", env::current_dir().unwrap())
+    }
+    println!("{:?}", env::current_dir().unwrap())
 }
-
 
 
 fn main() {
     let args = args::parse_args();
+    //test_args();
+
     let Ok(args) = args else {
         let err = args.err().unwrap();
         println!("error while parsing arguments: {}", err);
         exit(0);
     };
-    println!("file: {}", args.file);
-    println!("libs: {:?}", args.libs);
-    println!("targets: {:?}", args.targets);
+
+    //test_path();
+
 
     if let Err(msg) = generate::prepare_filesystem(&args) {
         println!("{}", msg);
