@@ -1,5 +1,4 @@
 use std::env;
-use std::fmt::Error;
 use std::string::ToString;
 
 pub struct Arguments {
