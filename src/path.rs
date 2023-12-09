@@ -1,13 +1,19 @@
 use std::env;
-use std::fmt::format;
 use std::path::{Path, PathBuf};
 
-pub fn absolutize(path: &str) -> PathBuf {
-    Path::new(path).join(env::current_dir().unwrap())
+/* 100% noob ugly code, please don't hit me */
+
+pub fn absolute(path: &str) -> PathBuf {
+    env::current_dir().unwrap().join(path)
 }
 
-pub fn folder(path: &str) -> &Path {
-    Path::new(path).parent().unwrap()
+pub fn filename(path: &str) -> &str {
+    Path::new(path).file_name().unwrap().to_str().unwrap()
+}
+
+pub fn folder(path: &str) -> String {
+    let abs = absolute(path);
+    return abs.parent().unwrap().to_str().unwrap().to_string()
 }
 
 pub fn set_extension(path: &str, extension: &str) -> PathBuf {
@@ -27,7 +33,7 @@ impl Drop for Cd {
 
 pub fn cd(directory: &str) -> Cd {
     let result =  Cd {
-        previous_directory: std::env::current_dir().unwrap(),
+        previous_directory: env::current_dir().unwrap(),
     };
     env::set_current_dir(directory).unwrap();
     result

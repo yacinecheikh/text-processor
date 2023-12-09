@@ -4,21 +4,21 @@ use std::io::Error;
 use crate::args::Arguments;
 
 use crate::parse;
-use crate::commands;
+use crate::external;
 use crate::parse::Section;
 
 
-pub fn prepare_filesystem(args: &Arguments) -> Result<(), String> {
-    // ignore error
-    let filename = args.file.as_str();
-    let _ = fs::create_dir(format!(".{}.generation", filename));
-    let _ = fs::create_dir(format!(".{}.generation/data", filename));
-    let _ = fs::create_dir(format!(".{}.generation/targets", filename));
-    let _ = fs::create_dir(format!(".{}.generation/libs", filename));
 
-    prepare_libs(args)?;
+pub fn prepare_filesystem(filename: &str) -> Result<(), Error>{
+    fs::create_dir(format!(".{}.generation", filename))?;
+    fs::create_dir(format!(".{}.generation/data", filename))?;
+    fs::create_dir(format!(".{}.generation/targets", filename))?;
+    fs::create_dir(format!(".{}.generation/libs", filename))?;
     Ok(())
 }
+pub fn clean_filesystem(file: &str) {
+}
+
 
 pub fn prepare_libs(args: &Arguments) -> Result<(), String> {
     for lib in args.libs.iter() {

@@ -1,4 +1,4 @@
-mod commands;
+mod external;
 mod parse;
 mod args;
 
@@ -22,24 +22,10 @@ mod tests;
 
 
 
-fn test_args() {
-    let args = args::parse_args();
-    match args {
-        Ok(args) => {
-            println!("file: {}", args.file);
-            println!("libs: {:?}", args.libs);
-            println!("targets: {:?}", args.targets);
-        }
-        Err(err) => {
-            println!("{}", err)
-        }
-    }
-}
-
 fn test_path() {
     //println!("{:?}", path::folder("/"));
     println!("{:?}", path::set_extension("/test.pdf", "md"));
-    println!("{:?}", path::absolutize("."));
+    println!("{:?}", path::absolute("."));
 
     {
         let _cd = path::cd("../../");
@@ -53,7 +39,6 @@ fn test_path() {
 
 fn main() {
     let args = args::parse_args();
-    //test_args();
 
     let Ok(args) = args else {
         let err = args.err().unwrap();
@@ -61,10 +46,14 @@ fn main() {
         exit(0);
     };
 
-    //test_path();
+    println!("{}", path::filename(args.file.as_str()));
+    println!("{}", path::folder(args.file.as_str()));
+    println!("{:?}", path::absolute(args.file.as_str()));
+    println!("{:?}", path::set_extension(args.file.as_str(), "txt"));
 
 
-    if let Err(msg) = generate::prepare_filesystem(&args) {
+
+    if let Err(msg) = generate::prepare_filesystem(args.file.as_str()) {
         println!("{}", msg);
         exit(0);
     }
