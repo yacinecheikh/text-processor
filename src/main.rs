@@ -1,41 +1,18 @@
 mod external;
 mod parse;
 mod args;
-
 mod generate;
-
 mod path;
+mod fs;
 
-use std::{env, fs};
-use std::process::{Command, exit, Stdio};
+use std::process::{exit};
 use std::io::{Read, Write};
 use std::ops::Deref;
-use crate::args::Arguments;
-use crate::generate::generate_target;
-//static delimiter: &str = ".";
-
+use std::path::Path;
 
 
 #[cfg(test)]
 mod tests;
-
-
-
-
-fn test_path() {
-    //println!("{:?}", path::folder("/"));
-    println!("{:?}", path::set_extension("/test.pdf", "md"));
-    println!("{:?}", path::absolute("."));
-
-    {
-        let _cd = path::cd("../../");
-        println!("{:?}", env::current_dir().unwrap());
-        let _cd = path::cd("../");
-        println!("{:?}", env::current_dir().unwrap())
-    }
-    println!("{:?}", env::current_dir().unwrap())
-}
-
 
 fn main() {
     let args = args::parse_args();
@@ -46,19 +23,30 @@ fn main() {
         exit(0);
     };
 
-    println!("{}", path::filename(args.file.as_str()));
-    println!("{}", path::folder(args.file.as_str()));
-    println!("{:?}", path::absolute(args.file.as_str()));
-    println!("{:?}", path::set_extension(args.file.as_str(), "txt"));
+    println!("{:?}", path::filename(Path::new("tests")));
 
-
-
-    if let Err(msg) = generate::prepare_filesystem(args.file.as_str()) {
-        println!("{}", msg);
-        exit(0);
+    /*match ::prepare_filesystem(args.file.as_str()) {
+        Ok(_) => {}
+        Err(msg) => {
+            println!("error while creating cache directories: {}", msg);
+            exit(0)
+        }
     }
 
-    let input = fs::read(&args.file)
+
+
+    match generate::clean_filesystem(args.file.as_str()) {
+        Ok(_) => {}
+        Err(msg) => {
+            println!("error while removing cache directories: {}", msg);
+            exit(0)
+        }
+    }
+     */
+
+    // not tested territory
+
+    let input = std::fs::read(&args.file)
         .unwrap();
     // use utf8 strings
     let source = String::from_utf8(input.clone()).expect("not utf-8");
@@ -66,7 +54,7 @@ fn main() {
 
 
     for target in args.targets {
-        println!("generating {}", &target);
+        println!("generating {}", &target.display());
         let result = generate::generate_target(&args.file, &target, source.clone());
         match result {
             Ok(()) => {

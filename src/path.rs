@@ -3,21 +3,21 @@ use std::path::{Path, PathBuf};
 
 /* 100% noob ugly code, please don't hit me */
 
-pub fn absolute(path: &str) -> PathBuf {
+pub fn absolute(path: &Path) -> PathBuf {
     env::current_dir().unwrap().join(path)
 }
 
-pub fn filename(path: &str) -> &str {
-    Path::new(path).file_name().unwrap().to_str().unwrap()
+pub fn filename(path: &Path) -> PathBuf {
+    PathBuf::from(path.file_name().unwrap())
 }
 
-pub fn folder(path: &str) -> String {
+pub fn folder(path: &Path) -> PathBuf {
     let abs = absolute(path);
-    return abs.parent().unwrap().to_str().unwrap().to_string()
+    abs.parent().unwrap().to_path_buf()
+    //return abs.parent().unwrap()//.to_str().unwrap().to_string()
 }
 
-pub fn set_extension(path: &str, extension: &str) -> PathBuf {
-    let path = Path::new(path);
+pub fn set_extension(path: &Path, extension: &str) -> PathBuf {
     return path.with_extension(extension)
 }
 
@@ -27,11 +27,11 @@ pub struct Cd {
 
 impl Drop for Cd {
     fn drop(&mut self) {
-        std::env::set_current_dir(&self.previous_directory).unwrap()
+        env::set_current_dir(&self.previous_directory).unwrap()
     }
 }
 
-pub fn cd(directory: &str) -> Cd {
+pub fn cd(directory: &Path) -> Cd {
     let result =  Cd {
         previous_directory: env::current_dir().unwrap(),
     };

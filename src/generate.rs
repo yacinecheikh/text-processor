@@ -1,43 +1,16 @@
 use std::fmt::format;
 use std::fs;
 use std::io::Error;
+use std::path::Path;
 use crate::args::Arguments;
 
-use crate::parse;
+use crate::{parse, path};
 use crate::external;
 use crate::parse::Section;
+use crate::path::{cd, filename};
 
 
-
-pub fn prepare_filesystem(filename: &str) -> Result<(), Error>{
-    fs::create_dir(format!(".{}.generation", filename))?;
-    fs::create_dir(format!(".{}.generation/data", filename))?;
-    fs::create_dir(format!(".{}.generation/targets", filename))?;
-    fs::create_dir(format!(".{}.generation/libs", filename))?;
-    Ok(())
-}
-pub fn clean_filesystem(file: &str) {
-}
-
-
-pub fn prepare_libs(args: &Arguments) -> Result<(), String> {
-    for lib in args.libs.iter() {
-        // each lib is an absolute path to a directory of binaries
-        let metadata = fs::metadata(lib.as_str());
-        match metadata {
-            Ok(meta) => {
-                todo!()
-            }
-            Err(err) => {
-                return Err(format!("could not find library \"{}\"", lib))
-            }
-        }
-
-    }
-    Ok(())
-}
-
-pub fn generate_target(file: &str, target: &str, text: String) -> Result<(), String> {
+pub fn generate_target(file: &Path, target: &Path, text: String) -> Result<(), String> {
     // TODO
 
     match process_file(text) {

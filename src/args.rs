@@ -1,10 +1,11 @@
 use std::env;
+use std::path::PathBuf;
 use std::string::ToString;
 
 pub struct Arguments {
-    pub libs: Vec<String>,
-    pub targets: Vec<String>,
-    pub file: String,
+    pub libs: Vec<PathBuf>,
+    pub targets: Vec<PathBuf>,
+    pub file: PathBuf,
 }
 
 static DEFAULT_FILE: &str = "/dev/stdin";
@@ -13,7 +14,7 @@ pub fn parse_args() -> Result<Arguments, String> {
     let mut arguments = Arguments {
         libs: vec![],
         targets: vec![],
-        file: DEFAULT_FILE.to_string(),
+        file: PathBuf::from(DEFAULT_FILE),
     };
     let mut args = env::args();
     args.next(); // skip args[0]
@@ -26,7 +27,7 @@ pub fn parse_args() -> Result<Arguments, String> {
                     }
                     Some(arg) => {
                         for lib in arg.split(",") {
-                            arguments.libs.push(lib.to_string());
+                            arguments.libs.push(PathBuf::from(lib));
                         }
                     }
                 }
@@ -38,16 +39,16 @@ pub fn parse_args() -> Result<Arguments, String> {
                     }
                     Some(arg) => {
                         for target in arg.split(",") {
-                            arguments.targets.push(target.to_string());
+                            arguments.targets.push(PathBuf::from(target));
                         }
                     }
                 }
             }
             _ => {
-                if arguments.file == DEFAULT_FILE {
-                    arguments.file = arg;
+                if arguments.file == PathBuf::from(DEFAULT_FILE) {
+                    arguments.file = PathBuf::from(arg);
                 } else {
-                    return Err(format!("Already processing file {}", arguments.file));
+                    return Err(format!("Already processing file {}", arguments.file.to_str().unwrap()));
                 }
             }
         }
