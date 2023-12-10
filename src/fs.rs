@@ -7,10 +7,17 @@ use crate::path::{absolute, cd, filename, folder};
 
 /* manage cache directories to resolve library and target binaries */
 
-pub fn setup(args: &mut Arguments) -> Result<(), String> {
+pub fn setup(args: &mut Arguments) -> Result<(), String>{
     if let Err(msg) = prepare_folders(args.file.as_path()) {
         return Err(format!("error while creating cache directories: {msg}"))
     }
+    for lib in args.libs.iter() {
+        add_lib(lib, args.file.as_path())?
+    }
+    for target in args.targets.iter() {
+        //add_target(target)?;
+    }
+    // TODO: replace relative Paths in Arguments by local (symlink) paths
     // TODO(better): don't symlink every lib, use them directly instead (and use Makefiles)
     // TODO: keep the data store (.{file}.tmp)
     Ok(())
