@@ -6,7 +6,7 @@ mod path;
 mod fs;
 
 use std::process::{exit};
-use std::io::{Read, Write};
+use std::io::{Error, Read, Write};
 use std::ops::Deref;
 use std::path::Path;
 
@@ -17,33 +17,27 @@ mod tests;
 fn main() {
     let args = args::parse_args();
 
-    let Ok(args) = args else {
+    let Ok(mut args) = args else {
         let err = args.err().unwrap();
         println!("error while parsing arguments: {}", err);
         exit(0);
     };
 
-    println!("{:?}", path::filename(Path::new("tests")));
-
-    /*match ::prepare_filesystem(args.file.as_str()) {
+    match fs::setup(&mut args) {
         Ok(_) => {}
         Err(msg) => {
-            println!("error while creating cache directories: {}", msg);
+            println!("error while creating cache directories:\n{}", msg);
             exit(0)
         }
     }
 
-
-
-    match generate::clean_filesystem(args.file.as_str()) {
+    match fs::cleanup(args.file.as_path()) {
         Ok(_) => {}
-        Err(msg) => {
-            println!("error while removing cache directories: {}", msg);
+        Err(err) => {
+            println!("error while removing cache directories: {}", err);
             exit(0)
         }
     }
-     */
-
     // not tested territory
 
     let input = std::fs::read(&args.file)
