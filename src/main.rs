@@ -8,7 +8,7 @@ mod fs;
 use std::process::{exit};
 use std::io::{Error, Read, Write};
 use std::ops::Deref;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 
 #[cfg(test)]
@@ -29,6 +29,14 @@ fn main() {
         Ok(_) => {}
         Err(err) => {
             println!("error while removing cache directories: {}", err);
+        }
+    }
+    match fs::resolve("echo", &args) {
+        None => {
+            println!("command not found")
+        }
+        Some(path) => {
+            println!("command found at: {}", path.display())
         }
     }
     // not tested territory
