@@ -1,1 +1,1 @@
-cargo run -- --lib test --target pdf,html,md tests/input
+cargo run -- --lib resources/lib/core --target resources/target/pdf,resources/target/md tests/input
