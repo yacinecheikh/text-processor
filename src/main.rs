@@ -23,19 +23,12 @@ fn main() {
         exit(0);
     };
 
-    match fs::setup(&mut args) {
-        Ok(_) => {}
-        Err(msg) => {
-            println!("error while creating cache directories:\n{}", msg);
-            exit(0)
-        }
-    }
+    fs::setup(&mut args);
 
     match fs::cleanup(args.file.as_path()) {
         Ok(_) => {}
         Err(err) => {
             println!("error while removing cache directories: {}", err);
-            exit(0)
         }
     }
     // not tested territory
