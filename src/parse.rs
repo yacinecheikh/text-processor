@@ -10,9 +10,9 @@ struct Tag {
     argument: Option<String>, // if an argument is found, having a block after : is optional and requires further indentation
 }
 pub struct Section {
-    name: String,
-    argument: Option<String>,
-    body: Option<String>,
+    pub name: String,
+    pub argument: Option<String>,
+    pub body: Option<String>,
 }
 
 

@@ -1,30 +1,71 @@
+use std::env::{args, join_paths};
 use std::fmt::format;
 use std::fs;
 use std::io::Error;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::args::Arguments;
 
 use crate::{parse, path};
-use crate::external;
+use crate::commands;
 use crate::parse::Section;
-use crate::path::{cd, filename};
+use crate::path::{cd, filename, parent_folder};
 
 
-pub fn generate_target(file: &Path, target: &Path, text: String) -> Result<(), String> {
-    // TODO
+pub struct Context<'a> {
+    pub outfile: &'a Path,
+    pub target: &'a Path, // relative paths are ok
+    pub libs: &'a [PathBuf]
+}
 
-    match process_file(text) {
-        Ok(text) => {
-            // TODO: write to a file
+// TODO: "globalize" current target
+// (to avoid giving it as a parameter to every function)
+// (alternative: use a symlink in the file system)
+
+pub fn generate_all(args: &Arguments) {
+    // read text once
+    let input = fs::read(&args.file)
+        .expect("could not read file");
+    let input = String::from_utf8(input).expect("not valid utf-8");
+    let input = input.as_str();
+
+    for target in args.targets.iter() {
+        let target_name = target.file_name()
+            .expect(format!("not a valid target: {}", target.display()).as_str());
+        let output_file = args.file.with_extension(target_name);
+        let compilation_context = Context {
+            outfile: output_file.as_path(),
+            target: target.as_path(),
+            libs: args.libs.as_slice(),
+        };
+        generate_target(compilation_context, input);
+    }
+}
+
+pub fn generate_target(context: Context, source: &str) {
+    //let output_file = config.outfile.with_extension(config.target.file_name());
+    match process_file(source, &context) {
+        Ok(result) => {
+            // last step: compile the result
+            // TODO: define as a constant the name of the compiling binary
+            match commands::eval(Section{
+                name: "generate".to_string(),
+                argument: None,
+                body: Some(result),
+            }, &context) {
+                None => {
+                    println!("failed to run the target compiler (generate for current target)");
+                }
+                Some(result) => {
+                    fs::write(context.outfile, result)
+                        .expect("could not write to output file");
+                }
+            }
         }
         Err(msg) => {
-            return Err(msg)
+            // compilation error
+            println!("error while compiling: {}", msg);
         }
     }
-
-    Err("TODO".to_string())
-
-    // TODO
 }
 
 fn combine_texts(added: &str, text: &str) -> String {
@@ -34,8 +75,11 @@ fn combine_texts(added: &str, text: &str) -> String {
     result
 }
 
-fn process_file(mut text: String) -> Result<String, String> {
+fn process_file(source: &str, context: &Context) -> Result<String, String> {
+    // same value (just using a slice to move forward without cloning the string)
+    let mut text = source.to_string();
     let mut left_text = text.as_str();
+    // output
     let mut processed = String::new();
 
     while left_text.len() > 0 {
@@ -45,8 +89,19 @@ fn process_file(mut text: String) -> Result<String, String> {
 
         if let Some(result) = parse::parse_section(left_text) {
             match result {
-                Ok((section, text)) => {
-                    left_text = text
+                Ok((section, left)) => {
+                    left_text = left;
+                    // needed for error message
+                    let command_name = section.name.clone();
+                    match commands::eval(section, context) {
+                        None => {
+                            return Err(format!("Could not run command {}", command_name))
+                        }
+                        Some(result) => {
+                            text = combine_texts(result.as_str(), left_text);
+                            left_text = text.as_str();
+                        }
+                    }
                     // TODO: use commands.rs to call the binary
                 }
                 Err(msg) => {

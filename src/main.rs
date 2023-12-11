@@ -1,14 +1,15 @@
-mod external;
+mod commands;
 mod parse;
 mod args;
 mod generate;
 mod path;
-mod fs;
 
+use std::fs;
 use std::process::{exit};
 use std::io::{Error, Read, Write};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
+use crate::generate::{Context, generate_all};
 
 
 #[cfg(test)]
@@ -23,31 +24,39 @@ fn main() {
         exit(0);
     };
 
-    fs::setup(&mut args);
+    commands::init(&mut args);
 
-    match fs::cleanup(args.file.as_path()) {
+
+    let context = Context {
+        outfile: args.file.as_path(),
+        target: args.targets[1].as_path(),
+        libs: args.libs.as_slice(),
+    };
+    let input = String::from_utf8(fs::read(args.file.as_path()).unwrap()).unwrap();
+    match commands::resolve("echo", &context) {
+        None => {
+            println!("failed")
+        }
+        Some(_) => {
+            println!("success")
+        }
+    }
+    generate::generate_target(context, input.as_str());
+
+    println!("finished generating");
+
+    //generate::generate_all(&args);
+
+    match commands::cleanup(args.file.as_path()) {
         Ok(_) => {}
         Err(err) => {
             println!("error while removing cache directories: {}", err);
         }
     }
-    match fs::resolve("echo", &args) {
-        None => {
-            println!("command not found")
-        }
-        Some(path) => {
-            println!("command found at: {}", path.display())
-        }
-    }
+
     // not tested territory
 
-    let input = std::fs::read(&args.file)
-        .unwrap();
-    // use utf8 strings
-    let source = String::from_utf8(input.clone()).expect("not utf-8");
-    let mut input = String::from_utf8(input).unwrap();
-
-
+    /*
     for target in args.targets {
         println!("generating {}", &target.display());
         let result = generate::generate_target(&args.file, &target, source.clone());
@@ -60,11 +69,8 @@ fn main() {
         }
     }
 
-    // TODO: check if still needed with new syntax
-    input.push('\n'); // needed when parsing the end of a block (".<command>.end\n")
 
-    let mut processed: Vec<String> = Vec::new();
-
+     */
 
     /*
     while let Some((line, left_text)) = parse::split_line(&input) {
@@ -130,8 +136,6 @@ fn main() {
     }
 
      */
-    let result = processed.join("\n");
-    println!("{}", result);
 
 
 
