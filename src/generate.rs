@@ -1,14 +1,10 @@
-use std::env::{args, join_paths};
-use std::fmt::format;
 use std::fs;
-use std::io::Error;
 use std::path::{Path, PathBuf};
 use crate::args::Arguments;
 
-use crate::{parse, path};
+use crate::{parse};
 use crate::commands;
 use crate::parse::Section;
-use crate::path::{cd, filename, parent_folder};
 
 
 pub struct Context<'a> {
@@ -68,7 +64,7 @@ pub fn generate_target(context: Context, source: &str) {
     }
 }
 
-fn combine_texts(added: &str, text: &str) -> String {
+pub fn combine_texts(added: &str, text: &str) -> String {
     let mut result = String::new();
     result.push_str(added);
     result.push_str(text);
@@ -86,6 +82,10 @@ fn process_file(source: &str, context: &Context) -> Result<String, String> {
         let (empty_lines, left) = parse::strip_empty_lines(left_text);
         processed.push_str(empty_lines);
         left_text = left;
+
+        if empty_lines.len() > 0 {
+            continue
+        }
 
         if let Some(result) = parse::parse_section(left_text) {
             match result {
@@ -109,16 +109,17 @@ fn process_file(source: &str, context: &Context) -> Result<String, String> {
                     return Err(msg)
                 }
             }
-        } else {
-            match parse::strip_line(left_text) {
-                None => {
-                    // end of text, should not happen
-                    panic!("got no text while calling strip_line() when left_text.len() > 0")
-                }
-                Some((line, text)) => {
-                    left_text = text;
-                    processed.push_str(line)
-                }
+
+            continue
+        }
+        match parse::strip_line(left_text) {
+            None => {
+                // end of text, should not happen
+                panic!("got no text while calling strip_line() when left_text.len() > 0")
+            }
+            Some((line, text)) => {
+                left_text = text;
+                processed.push_str(line)
             }
         }
     }

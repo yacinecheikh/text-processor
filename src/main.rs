@@ -9,7 +9,7 @@ use std::process::{exit};
 use std::io::{Error, Read, Write};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
-use crate::generate::{Context, generate_all};
+use crate::generate::{combine_texts, Context, generate_all};
 
 
 #[cfg(test)]
@@ -33,6 +33,8 @@ fn main() {
         libs: args.libs.as_slice(),
     };
     let input = String::from_utf8(fs::read(args.file.as_path()).unwrap()).unwrap();
+
+    /*
     match commands::resolve("echo", &context) {
         None => {
             println!("failed")
@@ -40,7 +42,7 @@ fn main() {
         Some(_) => {
             println!("success")
         }
-    }
+    }*/
     generate::generate_target(context, input.as_str());
 
     println!("finished generating");
