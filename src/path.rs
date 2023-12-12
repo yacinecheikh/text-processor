@@ -1,5 +1,4 @@
 use std::env;
-use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
 pub fn absolute(path: &Path) -> PathBuf {

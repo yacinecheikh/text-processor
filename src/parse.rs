@@ -1,4 +1,3 @@
-
 // syntaxes:
 // .command:\n (waiting for a block, indented or not)
 // .command: arg\n (may have a block, or not)
@@ -64,19 +63,7 @@ pub fn strip_line(text: &str) -> Option<(&str, &str)> {
     }
 }
 
-fn is_empty(line: &str) -> bool {
-    for ch in line.chars() {
-        match ch {
-            ' ' | '\t' => {},
-            // TODO: remove \n at end of line
-            '\n' => return true, // special case because i may have left a \n at the end of each line
-            _ => return false,
-        }
-    }
-    return true
-}
-
-pub fn strip_empty_lines(mut text: &str) -> (&str, &str) {
+pub fn strip_empty_lines(text: &str) -> (&str, &str) {
     let mut offset = 0;
     // only commit changes after a complete line is parsed
     let mut committed_offset = 0;
@@ -160,6 +147,9 @@ fn parse_tag(line: &str) -> Option<Tag> {
 
 
 fn parse_body<'a>(text: &'a str, tag: &Tag) -> Option<(String, &'a str)> {
+    if !tag.accept_block {
+        return None
+    }
     let result = get_next_indent(text);
     // all of this is just safety checks
     if result.is_none() {
