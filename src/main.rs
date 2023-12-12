@@ -26,24 +26,10 @@ fn main() {
 
     commands::init(&mut args);
 
+    //let input = String::from_utf8(fs::read(args.file.as_path()).unwrap()).unwrap();
 
-    let context = Context {
-        outfile: args.file.as_path(),
-        target: args.targets[1].as_path(),
-        libs: args.libs.as_slice(),
-    };
-    let input = String::from_utf8(fs::read(args.file.as_path()).unwrap()).unwrap();
-
-    /*
-    match commands::resolve("echo", &context) {
-        None => {
-            println!("failed")
-        }
-        Some(_) => {
-            println!("success")
-        }
-    }*/
-    generate::generate_target(context, input.as_str());
+    generate::generate_all(&args);
+    //generate::generate_target(context, input.as_str());
 
     println!("finished generating");
 

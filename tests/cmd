@@ -1,1 +1,2 @@
+cargo run -- --lib resources/lib/core --target resources/target/test tests/test-file
 cargo run -- --lib resources/lib/core --target resources/target/pdf,resources/target/test tests/test-file
