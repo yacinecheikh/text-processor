@@ -41,7 +41,7 @@ Btw, using a bunch of completely unknown programs to manipulate text is probably
 
 # Todo
 Here is a summarized list of landmarks to reach:
-* Main binary (~50%, the path manipulation and dynamic library linking is incomplete)
+* (done) Main binary: currently works, but could use some improvements
 * Write a target to compile to markdown or ODT (0%) and essential libraries (0%)
 * proof of concept: write an academic report (with features like table of contents or bibliography, using the data store)
 * Optimize the replacement algorithm to scale with higher text lengths (200+ pages)
