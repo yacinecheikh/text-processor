@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::fs;
 use std::io::{Error, Read, Write};
 use std::path::{Path, PathBuf};
@@ -53,13 +54,14 @@ pub fn resolve(command: &str, context: &Context) -> Option<PathBuf> {
 
 // TODO: remove set_current_dir() (not needed for commands, only once for the source file)
 
-pub fn eval(call: Section, context: &Context) -> Option<String> {
+pub fn eval(call: Section, context: &Context) -> Result<String, String> {
     let Section { name, argument, body } = call;
     run(name.as_str(), context, body, argument)
 }
 
-fn run(command: &str, context: &Context, input: Option<String>, parameter: Option<String>) -> Option<String> {
-    let command_path = resolve(command, context)?;
+fn run(command: &str, context: &Context, input: Option<String>, parameter: Option<String>) -> Result<String, String> {
+    let command_path = resolve(command, context)
+        .expect(&format!("could not find binary {}", command));
     let _cd = cd(parent_folder(context.outfile).as_path());
 
     let mut cmd = Command::new(command_path);
@@ -71,14 +73,18 @@ fn run(command: &str, context: &Context, input: Option<String>, parameter: Optio
         cmd.arg(parameter);
     }
 
-    let process = cmd.spawn().ok()?;
+    let process = cmd.spawn()
+        .expect("could not spawn subprocess, hint: check permissions");
 
     if input.is_some() {
-        process.stdin?.write(input.unwrap().as_ref()).ok()?;
+        process.stdin
+            .expect(&format!("could not get the stdin of subprocess {command}"))
+            .write(input.unwrap().as_ref())
+            .expect(&format!("could not write to the stdin of subprocess {command}"));
     }
 
     let mut result = String::new();
-    process.stdout?.read_to_string(&mut result).ok()?;
+    process.stdout.unwrap().read_to_string(&mut result).unwrap();
 
-    return Some(result)
+    return Ok(result)
 }

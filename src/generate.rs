@@ -48,12 +48,12 @@ pub fn generate_target(context: Context, source: &str) {
                 argument: None,
                 body: Some(result),
             }, &context) {
-                None => {
-                    println!("failed to run the target compiler (generate for current target)");
-                }
-                Some(result) => {
+                Ok(result) => {
                     fs::write(context.outfile, result)
                         .expect("could not write to output file");
+                }
+                Err(msg) => {
+                    println!("failed to run the target compiler (generate for current target), error: {msg}");
                 }
             }
         }
@@ -94,10 +94,10 @@ fn process_file(source: &str, context: &Context) -> Result<String, String> {
                     // needed for error message
                     let command_name = section.name.clone();
                     match commands::eval(section, context) {
-                        None => {
-                            return Err(format!("Could not run command {}", command_name))
+                        Err(e) => {
+                            return Err(format!("error when running command {}: {}", command_name, e))
                         }
-                        Some(result) => {
+                        Ok(result) => {
                             text = combine_texts(result.as_str(), left_text);
                             left_text = text.as_str();
                         }
